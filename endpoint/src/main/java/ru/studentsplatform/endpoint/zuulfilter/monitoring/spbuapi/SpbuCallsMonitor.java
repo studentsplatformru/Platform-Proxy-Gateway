@@ -32,7 +32,7 @@ public class SpbuCallsMonitor extends ZuulFilter {
 	public Object run() {
 		RequestContext context = RequestContext.getCurrentContext();
 		String uri = context.getRequest().getRequestURI();
-		for (var counter: SpbuUrlCallCounter.values()) {
+		for (var counter : SpbuUrlCallCounter.values()) {
 			if (uri.matches(counter.getUriRegex())) {
 				counter.getCounter().increment();
 			}

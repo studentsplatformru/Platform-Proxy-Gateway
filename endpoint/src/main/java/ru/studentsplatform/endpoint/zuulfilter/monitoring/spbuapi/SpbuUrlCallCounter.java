@@ -22,8 +22,7 @@ public enum SpbuUrlCallCounter {
 			.register(GetMeterRegister.meterRegistry), "/spbu/group/[^/]+/events/[^/]+"),
 	GET_EVENTS_FOR_PERIOD(Counter.builder("spbu.api.calls")
 			.tag("path", "/group/{group_id}/events/{start_date}/{end_date}")
-			.register(GetMeterRegister.meterRegistry), "/spbu/group/[^/]+/events/[^/]+/[^/]+")
-	;
+			.register(GetMeterRegister.meterRegistry), "/spbu/group/[^/]+/events/[^/]+/[^/]+");
 	private final Counter counter;
 	private final String uriRegex;
 
@@ -39,10 +38,12 @@ public enum SpbuUrlCallCounter {
 	public String getUriRegex() {
 		return uriRegex;
 	}
+
 	// Костыль для инъекции MeterRegistry в enum
 	@Component
 	static class GetMeterRegister {
 		public static MeterRegistry meterRegistry;
+
 		public GetMeterRegister(MeterRegistry meterRegistry) {
 			GetMeterRegister.meterRegistry = meterRegistry;
 		}

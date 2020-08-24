@@ -52,14 +52,14 @@ import java.util.Set;
 
 @Component
 public class RouteThroughProxyFilter extends ZuulFilter {
+	private static final String TEST_URL = "https://timetable.spbu.ru/api/v1/study/divisions/";
+	public static ProxyInfoDO currentProxy = null;
 	private final ProxyRequestHelper helper = new ProxyRequestHelper(new ZuulProperties());
+	private final Logger logger = LoggerFactory.getLogger(RouteThroughProxyFilter.class);
+	private final ProxyCallsMonitor proxyCallMonitor;
 	private CloseableHttpClient httpClient;
 	private Set<ProxyInfoDO> proxyInfoDOSet;
 	private Iterator<ProxyInfoDO> proxyIterator;
-	public static ProxyInfoDO currentProxy = null;
-	private static final String TEST_URL = "https://timetable.spbu.ru/api/v1/study/divisions/";
-	private final Logger logger =  LoggerFactory.getLogger(RouteThroughProxyFilter.class);
-	private final ProxyCallsMonitor proxyCallMonitor;
 
 	public RouteThroughProxyFilter(ProxyCallsMonitor proxyCallMonitor) {
 		this.proxyCallMonitor = proxyCallMonitor;
@@ -108,6 +108,7 @@ public class RouteThroughProxyFilter extends ZuulFilter {
 		setNewProxy();
 		this.httpClient = newClient();
 	}
+
 	private CloseableHttpResponse forward(String verb,
 										  String uri, HttpServletRequest request, MultiValueMap<String, String> headers,
 										  MultiValueMap<String, String> params, InputStream requestEntity) {
@@ -141,24 +142,27 @@ public class RouteThroughProxyFilter extends ZuulFilter {
 		}
 
 	}
+
 	private HttpHost getHttpHost(URL host) {
 		return new HttpHost(host.getHost(), host.getPort(),
 				host.getProtocol());
 	}
+
 	private String getVerb(HttpServletRequest request) {
 		String sMethod = request.getMethod();
 		return sMethod.toUpperCase();
 	}
+
 	private InputStream getRequestBody(HttpServletRequest request) {
 		InputStream requestEntity = null;
 		try {
 			requestEntity = request.getInputStream();
-		}
-		catch (IOException ex) {
+		} catch (IOException ex) {
 			// no requestBody is ok.
 		}
 		return requestEntity;
 	}
+
 	private void setResponse(HttpResponse response) {
 		try {
 			var content = response.getEntity().getContent();
@@ -167,12 +171,12 @@ public class RouteThroughProxyFilter extends ZuulFilter {
 					response.getEntity() == null ? null : content,
 					revertHeaders(response.getAllHeaders()));
 			content.close();
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			logger.error("Прервалась запись контента для ответа клиенту");
 		}
 
 	}
+
 	private MultiValueMap<String, String> revertHeaders(Header[] headers) {
 		MultiValueMap<String, String> map = new LinkedMultiValueMap<String, String>();
 		for (Header header : headers) {
@@ -184,46 +188,47 @@ public class RouteThroughProxyFilter extends ZuulFilter {
 		}
 		return map;
 	}
-		protected HttpRequest buildHttpRequest(String verb, String uri,
-				InputStreamEntity entity, MultiValueMap<String, String> headers,
-				MultiValueMap<String, String> params, HttpServletRequest request) {
-			HttpRequest httpRequest;
-			String uriWithQueryString = uri + this.helper.getQueryString(params);
 
-			switch (verb.toUpperCase()) {
-				case "POST":
-					HttpPost httpPost = new HttpPost(uriWithQueryString);
-					httpRequest = httpPost;
-					httpPost.setEntity(entity);
-					break;
-				case "PUT":
-					HttpPut httpPut = new HttpPut(uriWithQueryString);
-					httpRequest = httpPut;
-					httpPut.setEntity(entity);
-					break;
-				case "PATCH":
-					HttpPatch httpPatch = new HttpPatch(uriWithQueryString);
-					httpRequest = httpPatch;
-					httpPatch.setEntity(entity);
-					break;
-				case "DELETE":
-					BasicHttpEntityEnclosingRequest entityRequest = new BasicHttpEntityEnclosingRequest(
-							verb, uriWithQueryString);
-					httpRequest = entityRequest;
-					entityRequest.setEntity(entity);
-					break;
-				default:
-					httpRequest = new BasicHttpRequest(verb, uriWithQueryString);
-			}
+	protected HttpRequest buildHttpRequest(String verb, String uri,
+										   InputStreamEntity entity, MultiValueMap<String, String> headers,
+										   MultiValueMap<String, String> params, HttpServletRequest request) {
+		HttpRequest httpRequest;
+		String uriWithQueryString = uri + this.helper.getQueryString(params);
 
-			httpRequest.setHeaders(convertHeaders(headers));
-			return httpRequest;
+		switch (verb.toUpperCase()) {
+			case "POST":
+				HttpPost httpPost = new HttpPost(uriWithQueryString);
+				httpRequest = httpPost;
+				httpPost.setEntity(entity);
+				break;
+			case "PUT":
+				HttpPut httpPut = new HttpPut(uriWithQueryString);
+				httpRequest = httpPut;
+				httpPut.setEntity(entity);
+				break;
+			case "PATCH":
+				HttpPatch httpPatch = new HttpPatch(uriWithQueryString);
+				httpRequest = httpPatch;
+				httpPatch.setEntity(entity);
+				break;
+			case "DELETE":
+				BasicHttpEntityEnclosingRequest entityRequest = new BasicHttpEntityEnclosingRequest(
+						verb, uriWithQueryString);
+				httpRequest = entityRequest;
+				entityRequest.setEntity(entity);
+				break;
+			default:
+				httpRequest = new BasicHttpRequest(verb, uriWithQueryString);
 		}
+
+		httpRequest.setHeaders(convertHeaders(headers));
+		return httpRequest;
+	}
+
 	private CloseableHttpResponse forwardRequest(HttpHost httpHost, HttpRequest httpRequest) {
 		try {
 			return this.httpClient.execute(httpHost, httpRequest);
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			logger.info("Прокси перестало работать\n" + e.getMessage() + "\nПопытка установить новое прокси");
 			// Кидает исключение, если список прокси пуст и прокси по умолчанию не работает (те доступных прокси нет)
 			setNewProxy();
@@ -231,6 +236,7 @@ public class RouteThroughProxyFilter extends ZuulFilter {
 			return forwardRequest(httpHost, httpRequest);
 		}
 	}
+
 	private Header[] convertHeaders(MultiValueMap<String, String> headers) {
 		List<Header> list = new ArrayList<>();
 		for (String name : headers.keySet()) {
@@ -240,9 +246,10 @@ public class RouteThroughProxyFilter extends ZuulFilter {
 		}
 		return list.toArray(new BasicHeader[0]);
 	}
+
 	protected CloseableHttpClient newClient() {
 		HttpHost proxy = new HttpHost(currentProxy.getIp(), currentProxy.getPort());
-        DefaultProxyRoutePlanner routePlanner = new DefaultProxyRoutePlanner(proxy);
+		DefaultProxyRoutePlanner routePlanner = new DefaultProxyRoutePlanner(proxy);
 		HttpClientBuilder httpClientBuilder = HttpClients.custom();
 		RequestConfig config = RequestConfig.custom().setConnectTimeout(3000)
 				.setConnectionRequestTimeout(3000).build();
@@ -252,6 +259,7 @@ public class RouteThroughProxyFilter extends ZuulFilter {
 				.setDefaultRequestConfig(config)
 				.build();
 	}
+
 	protected void setNewProxy() {
 		if (proxyInfoDOSet.isEmpty()) {
 			setProxyInfoSet();
@@ -263,12 +271,12 @@ public class RouteThroughProxyFilter extends ZuulFilter {
 				proxyCallMonitor.remove(currentProxy);
 				setNewProxy();
 			}
-		}
-		else {
+		} else {
 			proxyIterator = proxyInfoDOSet.iterator();
 			setNewProxy();
 		}
 	}
+
 	@Scheduled(cron = "0 0 4 * * ?")
 	private void setProxyInfoSet() {
 		WebClient webClient = WebClient.create();
@@ -294,36 +302,37 @@ public class RouteThroughProxyFilter extends ZuulFilter {
 			logger.error("Ошибка: закончились прокси");
 		}
 	}
+
 	@Timed()
 	private void removeBadProxies() {
 		var arr = new ProxyInfoDO[proxyInfoDOSet.size()];
 		proxyInfoDOSet.toArray(arr);
 		for (var currentProxy : arr) {
-			if(isBadProxy(currentProxy)) {
+			if (isBadProxy(currentProxy)) {
 				proxyInfoDOSet.remove(currentProxy);
 				logger.info("Removed proxy " + currentProxy.getIp() + ":" + currentProxy.getPort());
 			}
 		}
 	}
+
 	private boolean isBadProxy(ProxyInfoDO proxyInfoDO) {
 		HttpHost proxy = new HttpHost(proxyInfoDO.getIp(), proxyInfoDO.getPort());
-        DefaultProxyRoutePlanner routePlanner = new DefaultProxyRoutePlanner(proxy);
+		DefaultProxyRoutePlanner routePlanner = new DefaultProxyRoutePlanner(proxy);
 		RequestConfig config = RequestConfig.custom().setConnectTimeout(3000)
 				.setConnectionRequestTimeout(3000).build();
-        CloseableHttpClient httpClient
-                = HttpClients.custom()
-                .setSSLHostnameVerifier(new NoopHostnameVerifier())
-                .setRoutePlanner(routePlanner)
+		CloseableHttpClient httpClient
+				= HttpClients.custom()
+				.setSSLHostnameVerifier(new NoopHostnameVerifier())
+				.setRoutePlanner(routePlanner)
 				.setDefaultRequestConfig(config)
-                .build();
-        HttpComponentsClientHttpRequestFactory requestFactory
-                = new HttpComponentsClientHttpRequestFactory();
-        requestFactory.setHttpClient(httpClient);
+				.build();
+		HttpComponentsClientHttpRequestFactory requestFactory
+				= new HttpComponentsClientHttpRequestFactory();
+		requestFactory.setHttpClient(httpClient);
 		try {
 			new RestTemplate(requestFactory).getForObject("https://timetable.spbu.ru/api/v1/study/divisions", String.class);
 			return false;
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			return true;
 		}
 	}
