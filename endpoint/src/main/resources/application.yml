@@ -1,0 +1,17 @@
+server:
+  port: 8090
+zuul:
+  routes:
+    users:
+      path: /spbu/**
+      url: https://timetable.spbu.ru/api/v1/
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus,info,health
+logging:
+  config: "classpath:logback-spring.xml"
+  file:
+    name: "log"
+
