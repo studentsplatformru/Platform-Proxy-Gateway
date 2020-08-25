@@ -31,5 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
-LOG_FILE_IS_UNDEFINED
+
+LOG_*_IS_UNDEFINED
 log
+*.log

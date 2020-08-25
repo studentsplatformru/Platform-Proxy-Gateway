@@ -4,6 +4,10 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.stereotype.Component;
 
+/**
+ * Enum для фильтра SpbuCallMonitor.
+ * Содержит счетчики для micrometr'а и uri в виде regex'а для каждого адреса, на который мб послан запрос.
+ */
 public enum SpbuUrlCallCounter {
 	GET_DIVISIONS(Counter.builder("spbu.api.calls")
 			.tag("path", "/study/divisions")
@@ -42,9 +46,8 @@ public enum SpbuUrlCallCounter {
 	// Костыль для инъекции MeterRegistry в enum
 	@Component
 	static class GetMeterRegister {
-		public static MeterRegistry meterRegistry;
-
-		public GetMeterRegister(MeterRegistry meterRegistry) {
+		private static MeterRegistry meterRegistry;
+		GetMeterRegister(MeterRegistry meterRegistry) {
 			GetMeterRegister.meterRegistry = meterRegistry;
 		}
 	}

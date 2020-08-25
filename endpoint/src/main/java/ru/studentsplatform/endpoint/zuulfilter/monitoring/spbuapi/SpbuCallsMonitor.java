@@ -5,9 +5,12 @@ import com.netflix.zuul.context.RequestContext;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.stereotype.Component;
 
+/**
+ * "Post" фильтр, который служит для мониторинга количества вызовов, посланных на api spbu.
+ */
 @Component
 public class SpbuCallsMonitor extends ZuulFilter {
-	public MeterRegistry meterRegistry;
+	private MeterRegistry meterRegistry;
 
 	public SpbuCallsMonitor(MeterRegistry meterRegistry) {
 		this.meterRegistry = meterRegistry;
@@ -30,6 +33,8 @@ public class SpbuCallsMonitor extends ZuulFilter {
 
 	@Override
 	public Object run() {
+		// Получаем uri, на который был послан запрос и
+		// инкрементим, соответствующий этому uri, счетчик.
 		RequestContext context = RequestContext.getCurrentContext();
 		String uri = context.getRequest().getRequestURI();
 		for (var counter : SpbuUrlCallCounter.values()) {
