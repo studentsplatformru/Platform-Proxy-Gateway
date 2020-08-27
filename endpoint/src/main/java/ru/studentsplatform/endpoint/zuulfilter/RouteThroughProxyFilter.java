@@ -4,6 +4,7 @@ import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import com.netflix.zuul.ZuulFilter;
 import com.netflix.zuul.context.RequestContext;
@@ -94,7 +95,7 @@ public class RouteThroughProxyFilter extends ZuulFilter {
 
 	@Override
 	public int filterOrder() {
-		return 100;
+		return 101;
 	}
 
 	@Override
@@ -106,6 +107,8 @@ public class RouteThroughProxyFilter extends ZuulFilter {
 	public Object run() {
 		// Получаем всю инфу о запросе
 		RequestContext context = RequestContext.getCurrentContext();
+		RequestContext.getCurrentContext().getZuulResponseHeaders()
+				.removeIf(h -> h.first().equals(HttpHeaders.CONTENT_ENCODING));
 		HttpServletRequest request = context.getRequest();
 		MultiValueMap<String, String> headers = this.helper
 				.buildZuulRequestHeaders(request);
@@ -264,7 +267,7 @@ public class RouteThroughProxyFilter extends ZuulFilter {
 		// https://rapidapi.com/proxypage/api/proxypage1?endpoint=apiendpoint_9a468c19-cb34-40bb-8d26-4750ce1fdf60
 		// limit в uri устанавливает число запрашиваемых прокси
 		ProxyInfoDO[] proxyList = webClient.get()
-				.uri("https://proxypage1.p.rapidapi.com/v1/tier1?limit=5&country=US&type=HTTP")
+				.uri("https://proxypage1.p.rapidapi.com/v1/tier1?limit=15&country=US&type=HTTP")
 				.header("x-rapidapi-host", "proxypage1.p.rapidapi.com")
 				.header("x-rapidapi-key", "fbb474e72bmsh17ee9bd1a82f326p106189jsn59d0278f059f")
 				.header("content-type", "application/x-www-form-urlencoded")
@@ -306,8 +309,11 @@ public class RouteThroughProxyFilter extends ZuulFilter {
 		ReactorClientHttpConnector connector = new ReactorClientHttpConnector(httpClient);
 		try {
 			WebClient webClient = WebClient.builder().clientConnector(connector).build();
-			webClient.get().uri(TEST_URL).exchange().block();
-			return false;
+			var response = webClient.get().uri(TEST_URL).exchange().block();
+			if (response.statusCode().is2xxSuccessful()) {
+				return false;
+			}
+			return true;
 		} catch (Exception e) {
 			return true;
 		}
