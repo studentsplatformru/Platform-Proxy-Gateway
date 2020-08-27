@@ -1,3 +1,4 @@
+
 server:
   port: 8090
 zuul:
@@ -15,4 +16,21 @@ logging:
   config: "classpath:logback-spring.xml"
   file:
     name: "log"
-
+#spring:
+#  security:
+#    user:
+#      name: admin
+#      password: admin
+#  boot:
+#    admin:
+#      client:
+#        url: http://localhost:8090
+#        username: admin
+#        password: admin
+#        instance:
+#          metadata:
+#            user:
+#              name: admin
+#              password: admin
+#  application:
+#    name: spring-boot-admin-server

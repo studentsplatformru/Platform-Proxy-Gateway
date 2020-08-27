@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 public enum SpbuUrlCallCounter {
 	GET_DIVISIONS(Counter.builder("spbu.api.calls")
 			.tag("path", "/study/divisions")
-			.register(GetMeterRegister.meterRegistry), "/spbu/study/divisions"),
+			.register(GetMeterRegister.meterRegistry), "/spbu/study/divisions/"),
 	GET_PROGRAM_FOR_DIVISION(Counter.builder("spbu.api.calls")
 			.tag("path", "/division/{alias}}/programs")
 			.register(GetMeterRegister.meterRegistry), "/spbu/division/[^/]+/programs"),
@@ -19,14 +19,14 @@ public enum SpbuUrlCallCounter {
 			.tag("path", "/program/{program_id}/groups")
 			.register(GetMeterRegister.meterRegistry), "/spbu/program/[^/]+/groups"),
 	GET_EVENTS_FOR_GROUP(Counter.builder("spbu.api.calls")
-			.tag("path", "/group/{group_id}/events")
-			.register(GetMeterRegister.meterRegistry), "/spbu/group/[^/]+/events"),
+			.tag("path", "/groups/{group_id}/events")
+			.register(GetMeterRegister.meterRegistry), "/spbu/groups/[^/]+/events"),
 	GET_EVENTS_FOR_DAY(Counter.builder("spbu.api.calls")
-			.tag("path", "/group/{group_id}/events/{data}")
-			.register(GetMeterRegister.meterRegistry), "/spbu/group/[^/]+/events/[^/]+"),
+			.tag("path", "/groups/{group_id}/events/{data}")
+			.register(GetMeterRegister.meterRegistry), "/spbu/groups/[^/]+/events/[^/]+"),
 	GET_EVENTS_FOR_PERIOD(Counter.builder("spbu.api.calls")
-			.tag("path", "/group/{group_id}/events/{start_date}/{end_date}")
-			.register(GetMeterRegister.meterRegistry), "/spbu/group/[^/]+/events/[^/]+/[^/]+");
+			.tag("path", "/groups/{group_id}/events/{start_date}/{end_date}")
+			.register(GetMeterRegister.meterRegistry), "/spbu/groups/[^/]+/events/[^/]+/[^/]+");
 	private final Counter counter;
 	private final String uriRegex;
 
