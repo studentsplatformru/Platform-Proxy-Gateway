@@ -6,7 +6,13 @@ zuul:
     users:
       path: /spbu/**
       url: https://timetable.spbu.ru/api/v1/
-
+  host:
+    connect-timeout-millis: 80000
+    socket-timeout-millis: 80000
+    max-total-connections: 200
+    max-per-route-connections: 20
+    time-unit: MILLISECONDS
+    time-to-live: 100000
 management:
   endpoints:
     web:

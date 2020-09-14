@@ -69,7 +69,7 @@ public class RouteThroughProxyFilter extends ZuulFilter {
 	// Url для тестинга работоспособности прокси
 	private static final String TEST_URL = "https://timetable.spbu.ru/api/v1/study/divisions/";
 	// Максимальный timeout при отправке запроса через прокси
-	private static final int MAX_TIMEOUT_IN_MILLISECONDS = 3000;
+	private static final int MAX_TIMEOUT_IN_MILLISECONDS = 40000;
 	private static ProxyInfoDO currentProxy = null;
 	// Хелпер для обработки запроса
 	private final ProxyRequestHelper helper;
@@ -107,8 +107,6 @@ public class RouteThroughProxyFilter extends ZuulFilter {
 	public Object run() {
 		// Получаем всю инфу о запросе
 		RequestContext context = RequestContext.getCurrentContext();
-		RequestContext.getCurrentContext().getZuulResponseHeaders()
-				.removeIf(h -> h.first().equals(HttpHeaders.CONTENT_ENCODING));
 		HttpServletRequest request = context.getRequest();
 		MultiValueMap<String, String> headers = this.helper
 				.buildZuulRequestHeaders(request);
@@ -122,11 +120,16 @@ public class RouteThroughProxyFilter extends ZuulFilter {
 		String uri = this.helper.buildZuulRequestURI(request);
 		this.helper.addIgnoredHeaders();
 		// Посылаем запрос, пропуская его через прокси
-		var response = forward(verb, uri, request,
-				headers, params, requestEntity);
-		setResponse(response);
+		try {
+			var response = forward(verb, uri, request,
+					headers, params, requestEntity);
+			setResponse(response);
+			RequestContext.getCurrentContext().getZuulResponseHeaders()
+					.removeIf(h -> h.first().equals(HttpHeaders.CONTENT_ENCODING));
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
 		// Отправляем клиенту полученный ответ
-
 		return null;
 	}
 	// Перед запуском сервиса получаем и устанавливаем сет прокси, через которые посылаем запрос
@@ -244,7 +247,7 @@ public class RouteThroughProxyFilter extends ZuulFilter {
 		// стало нерабочим, то удаляем его и ставим новое.
 		if (proxyIterator.hasNext()) {
 			currentProxy = proxyIterator.next();
-			System.out.println(currentProxy);
+			logger.info(currentProxy.toString());
 			proxyCallMonitor.setCurrentProxy(currentProxy);
 			this.restTemplate = newRestTemplate();
 			if (isBadProxy(currentProxy)) {
@@ -267,7 +270,7 @@ public class RouteThroughProxyFilter extends ZuulFilter {
 		// https://rapidapi.com/proxypage/api/proxypage1?endpoint=apiendpoint_9a468c19-cb34-40bb-8d26-4750ce1fdf60
 		// limit в uri устанавливает число запрашиваемых прокси
 		ProxyInfoDO[] proxyList = webClient.get()
-				.uri("https://proxypage1.p.rapidapi.com/v1/tier1?limit=15&country=US&type=HTTP")
+				.uri("https://proxypage1.p.rapidapi.com/v1/tier1?limit=10&type=HTTPS")
 				.header("x-rapidapi-host", "proxypage1.p.rapidapi.com")
 				.header("x-rapidapi-key", "fbb474e72bmsh17ee9bd1a82f326p106189jsn59d0278f059f")
 				.header("content-type", "application/x-www-form-urlencoded")

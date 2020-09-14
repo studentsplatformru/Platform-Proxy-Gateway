@@ -13,19 +13,19 @@ public enum SpbuUrlCallCounter {
 			.tag("path", "/study/divisions")
 			.register(GetMeterRegister.meterRegistry), "/spbu/study/divisions/"),
 	GET_PROGRAM_FOR_DIVISION(Counter.builder("spbu.api.calls")
-			.tag("path", "/division/{alias}}/programs")
-			.register(GetMeterRegister.meterRegistry), "/spbu/division/[^/]+/programs"),
+			.tag("path", "/study/divisions/{alias}/programs/levels")
+			.register(GetMeterRegister.meterRegistry), "/spbu/study/divisions/[^/]+/programs/levels"),
 	GET_GROUPS_FOR_PROGRAM(Counter.builder("spbu.api.calls")
-			.tag("path", "/program/{program_id}/groups")
-			.register(GetMeterRegister.meterRegistry), "/spbu/program/[^/]+/groups"),
+			.tag("path", "/progams/{id}/groups")
+			.register(GetMeterRegister.meterRegistry), "/spbu/progams/[^/]+/groups"),
 	GET_EVENTS_FOR_GROUP(Counter.builder("spbu.api.calls")
-			.tag("path", "/groups/{group_id}/events")
+			.tag("path", "/groups/{id}/events")
 			.register(GetMeterRegister.meterRegistry), "/spbu/groups/[^/]+/events"),
 	GET_EVENTS_FOR_DAY(Counter.builder("spbu.api.calls")
-			.tag("path", "/groups/{group_id}/events/{data}")
+			.tag("path", "/groups/{id}/events/{start}")
 			.register(GetMeterRegister.meterRegistry), "/spbu/groups/[^/]+/events/[^/]+"),
 	GET_EVENTS_FOR_PERIOD(Counter.builder("spbu.api.calls")
-			.tag("path", "/groups/{group_id}/events/{start_date}/{end_date}")
+			.tag("path", "/groups/{id}/events/{start}/{end}")
 			.register(GetMeterRegister.meterRegistry), "/spbu/groups/[^/]+/events/[^/]+/[^/]+");
 	private final Counter counter;
 	private final String uriRegex;
