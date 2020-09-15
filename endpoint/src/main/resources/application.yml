@@ -1,0 +1,42 @@
+
+server:
+  port: 8090
+zuul:
+  routes:
+    users:
+      path: /spbu/**
+      url: https://timetable.spbu.ru/api/v1/
+  host:
+    connect-timeout-millis: 80000
+    socket-timeout-millis: 80000
+    max-total-connections: 200
+    max-per-route-connections: 20
+    time-unit: MILLISECONDS
+    time-to-live: 100000
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus,info,health
+logging:
+  config: "classpath:logback-spring.xml"
+  file:
+    name: "log"
+#spring:
+#  security:
+#    user:
+#      name: admin
+#      password: admin
+#  boot:
+#    admin:
+#      client:
+#        url: http://localhost:8090
+#        username: admin
+#        password: admin
+#        instance:
+#          metadata:
+#            user:
+#              name: admin
+#              password: admin
+#  application:
+#    name: spring-boot-admin-server
